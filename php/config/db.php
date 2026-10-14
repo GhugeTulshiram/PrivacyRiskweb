@@ -100,11 +100,21 @@ if ($is_supabase) {
         $pg_pass = isset($parts['pass']) ? urldecode($parts['pass']) : '';
         $pg_db   = isset($parts['path']) ? urldecode(ltrim($parts['path'], '/')) : 'postgres';
     } else {
-        $pg_host = $supabase_host ?: 'db.abnkzobsndllckanbiiu.supabase.co';
-        $pg_port = get_config_env('SUPABASE_PORT') ?: (get_config_env('PGPORT') ?: (get_config_env('POSTGRES_PORT') ?: 5432));
-        $pg_user = get_config_env('SUPABASE_USER') ?: (get_config_env('PGUSER') ?: (get_config_env('POSTGRES_USER') ?: 'postgres'));
+        $pg_host = $supabase_host ?: 'aws-0-ap-south-1.pooler.supabase.com';
+        $pg_port = (int)(get_config_env('SUPABASE_PORT') ?: (get_config_env('PGPORT') ?: (get_config_env('POSTGRES_PORT') ?: 5432)));
+        $pg_user = get_config_env('SUPABASE_USER') ?: (get_config_env('PGUSER') ?: (get_config_env('POSTGRES_USER') ?: 'postgres.abnkzobsndllckanbiiu'));
         $pg_pass = get_config_env('SUPABASE_PASSWORD') ?: (get_config_env('PGPASSWORD') ?: (get_config_env('POSTGRES_PASSWORD') ?: '9307615742@Ram'));
         $pg_db   = get_config_env('SUPABASE_DB') ?: (get_config_env('PGDATABASE') ?: (get_config_env('POSTGRES_DATABASE') ?: 'postgres'));
+    }
+
+    // Auto-convert direct IPv6 host to IPv4 pooler (critical for Vercel & serverless environments)
+    if (strpos($pg_host, 'db.') === 0 && strpos($pg_host, '.supabase.co') !== false) {
+        $ref = substr($pg_host, 3, strpos($pg_host, '.supabase.co') - 3);
+        $pg_host = 'aws-0-ap-south-1.pooler.supabase.com';
+        if (strpos($pg_user, '.') === false) {
+            $pg_user = "{$pg_user}.{$ref}";
+        }
+        $pg_port = 5432;
     }
 
     // Guard: Supabase requires Database Password for PostgreSQL connections
@@ -201,16 +211,40 @@ if ($is_supabase) {
         public $error = "";
 
         public function __construct($host, $port, $dbname, $user, $password) {
-            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
-            try {
-                $this->pdo = new PDO($dsn, $user, $password, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_TIMEOUT => 10,
-                ]);
-            } catch (PDOException $e) {
-                $this->connect_error = $e->getMessage();
+            $candidates = [
+                ['host' => $host, 'port' => $port, 'user' => $user],
+            ];
+
+            // If connecting via pooler on 5432, also try 6543 as secondary fallback
+            if (strpos($host, 'pooler.supabase.com') !== false && (int)$port === 5432) {
+                $candidates[] = ['host' => $host, 'port' => 6543, 'user' => $user];
             }
+            // If direct IPv6 host db.*.supabase.co, add IPv4 pooler fallbacks
+            if (strpos($host, 'db.') === 0 && strpos($host, '.supabase.co') !== false) {
+                $ref = substr($host, 3, strpos($host, '.supabase.co') - 3);
+                $p_user = (strpos($user, '.') === false) ? "{$user}.{$ref}" : $user;
+                $candidates[] = ['host' => 'aws-0-ap-south-1.pooler.supabase.com', 'port' => 5432, 'user' => $p_user];
+                $candidates[] = ['host' => 'aws-0-ap-south-1.pooler.supabase.com', 'port' => 6543, 'user' => $p_user];
+            }
+
+            $last_error = "";
+            foreach ($candidates as $cand) {
+                $dsn = "pgsql:host={$cand['host']};port={$cand['port']};dbname={$dbname};sslmode=require";
+                try {
+                    $this->pdo = new PDO($dsn, $cand['user'], $password, [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => true,
+                        PDO::ATTR_TIMEOUT => 6,
+                    ]);
+                    $this->connect_error = null;
+                    return;
+                } catch (PDOException $e) {
+                    $last_error = $e->getMessage();
+                }
+            }
+
+            $this->connect_error = $last_error;
         }
 
         public function prepare($query) {
