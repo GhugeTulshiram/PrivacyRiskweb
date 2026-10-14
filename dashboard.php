@@ -2473,10 +2473,10 @@ if ($total_scans > 0) {
             </div>
         </div>
         <div style="display: flex; gap: 10px; flex-shrink: 0;">
-            <a href="antivirus.php" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); transition: transform 0.2s;">
+            <a href="antivirus.php?tab=camera" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); transition: transform 0.2s;">
                 <span>📸</span> Launch Camera Scanner
             </a>
-            <a href="antivirus.php" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s;">
+            <a href="antivirus.php?tab=file" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s;">
                 <span>📁</span> Scan Files / URLs
             </a>
         </div>

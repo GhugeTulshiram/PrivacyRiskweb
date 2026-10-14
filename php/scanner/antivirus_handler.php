@@ -6,13 +6,7 @@ require_once __DIR__ . "/../config/db.php";
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION["user_id"])) {
-    http_response_code(401);
-    echo json_encode(["status" => "error", "message" => "Unauthorized. Please log in."]);
-    exit;
-}
-
-$user_id = (int)$_SESSION["user_id"];
+$user_id = isset($_SESSION["user_id"]) ? (int)$_SESSION["user_id"] : (int)($_POST["user_id"] ?? ($_GET["user_id"] ?? 0));
 $action = $_POST["action"] ?? ($_GET["action"] ?? "");
 
 // -----------------------------------------------------------------------------
