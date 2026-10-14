@@ -15,11 +15,12 @@ if (file_exists($env_file) && is_readable($env_file)) {
             list($env_k, $env_v) = explode('=', $env_line, 2);
             $env_k = trim($env_k);
             $env_v = trim($env_v, " \t\n\r\0\x0B\"'");
-            if (getenv($env_k) === false && !isset($_ENV[$env_k])) {
-                putenv("{$env_k}={$env_v}");
-                $_ENV[$env_k] = $env_v;
-                $_SERVER[$env_k] = $env_v;
-            }
+               $curr = getenv($env_k);
+               if ($curr === false || $curr === '') {
+                   putenv("{$env_k}={$env_v}");
+                   $_ENV[$env_k] = $env_v;
+                   $_SERVER[$env_k] = $env_v;
+               }
         }
     }
 }
@@ -73,7 +74,8 @@ $supabase_host = get_config_env('SUPABASE_HOST')
     ?: '';
 
 $supabase_url = get_config_env('SUPABASE_URL')
-    ?: get_config_env('NEXT_PUBLIC_SUPABASE_URL');
+    ?: get_config_env('NEXT_PUBLIC_SUPABASE_URL')
+    ?: 'https://abnkzobsndllckanbiiu.supabase.co';
 
 if (empty($supabase_host) && !empty($supabase_url)) {
     $parsed_supa = parse_url($supabase_url);
@@ -98,10 +100,10 @@ if ($is_supabase) {
         $pg_pass = isset($parts['pass']) ? urldecode($parts['pass']) : '';
         $pg_db   = isset($parts['path']) ? urldecode(ltrim($parts['path'], '/')) : 'postgres';
     } else {
-        $pg_host = $supabase_host;
+        $pg_host = $supabase_host ?: 'db.abnkzobsndllckanbiiu.supabase.co';
         $pg_port = get_config_env('SUPABASE_PORT') ?: (get_config_env('PGPORT') ?: (get_config_env('POSTGRES_PORT') ?: 5432));
         $pg_user = get_config_env('SUPABASE_USER') ?: (get_config_env('PGUSER') ?: (get_config_env('POSTGRES_USER') ?: 'postgres'));
-        $pg_pass = get_config_env('SUPABASE_PASSWORD') ?: (get_config_env('PGPASSWORD') ?: (get_config_env('POSTGRES_PASSWORD') ?: ''));
+        $pg_pass = get_config_env('SUPABASE_PASSWORD') ?: (get_config_env('PGPASSWORD') ?: (get_config_env('POSTGRES_PASSWORD') ?: '9307615742@Ram'));
         $pg_db   = get_config_env('SUPABASE_DB') ?: (get_config_env('PGDATABASE') ?: (get_config_env('POSTGRES_DATABASE') ?: 'postgres'));
     }
 
