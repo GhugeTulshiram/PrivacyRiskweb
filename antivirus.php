@@ -1049,23 +1049,38 @@ if ($stmt) {
                     </div>
 
                     <div class="camera-screen" id="cameraScreen" style="position:relative; min-height:420px; overflow:hidden;">
-                        <video id="cameraVideo" autoplay playsinline muted style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; transform:scaleX(-1);"></video>
-                        <canvas id="cameraCanvas" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;"></canvas>
+                        <video id="cameraVideo" autoplay playsinline muted style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; transform:scaleX(-1); z-index:1;"></video>
+                        <canvas id="cameraCanvas" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2;"></canvas>
 
-                        <div class="scan-overlay" id="scanOverlay" style="display:none;">
+                        <div class="scan-overlay" id="scanOverlay" style="display:none; z-index:3;">
                             <div class="scan-reticle">
                                 <div class="laser-line"></div>
                             </div>
                         </div>
 
-                        <div class="camera-placeholder" id="cameraPlaceholder" style="position:relative; z-index:2; text-align:center; padding:30px;">
+                        <!-- Camera Placeholder & Permission Error Banner -->
+                        <div class="camera-placeholder" id="cameraPlaceholder" style="position:relative; z-index:4; text-align:center; padding:30px; width:100%;">
                             <div class="cam-big-icon" id="camIconPlaceholder">📷</div>
                             <h3 style="color:#fff; margin-bottom:6px;" id="camHeadingPlaceholder">Camera Threat Defense Ready</h3>
                             <p style="font-size:12px; max-width:340px; margin:0 auto 16px; color:#94a3b8;" id="camDescPlaceholder">
                                 Activate live optical stream to detect malicious QR codes, exposed cards/IDs, and shoulder-surfing snooping in real-time.
                             </p>
+
+                            <!-- In-place error banner if permission blocked -->
+                            <div id="cameraPermissionError" style="display:none; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); border-radius:12px; padding:16px; max-width:440px; margin:0 auto 16px; text-align:left;">
+                                <div style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:700; font-size:13px; margin-bottom:6px;">
+                                    <span>⚠️</span> <span id="cameraErrorTitle">Camera Permission Blocked</span>
+                                </div>
+                                <div style="font-size:12px; color:#fca5a5; line-height:1.5;" id="cameraErrorMsg">
+                                    Your browser has blocked camera access for this page.
+                                </div>
+                                <div style="margin-top:10px; font-size:11px; color:#cbd5e1; background:rgba(0,0,0,0.3); padding:8px 10px; border-radius:8px;">
+                                    <strong>How to enable in Chrome:</strong> Click the <strong>tune/sliders icon ⚙️</strong> on the left side of the address bar &rarr; Set <strong>Camera</strong> to <strong>Allow</strong> &rarr; Click Retry below.
+                                </div>
+                            </div>
+
                             <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-                                <button class="btn btn-primary" id="btnMainStartCam" onclick="startCamera()">
+                                <button class="btn btn-primary btn-cam-start" id="btnMainStartCam" onclick="startCamera()">
                                     <span>▶</span> Start Live Camera Scan
                                 </button>
                                 <button class="btn btn-secondary" onclick="startSimulatedCamera()" style="border-color:rgba(56, 189, 248, 0.4); color:#38bdf8;">
@@ -1076,10 +1091,10 @@ if ($stmt) {
                     </div>
 
                     <div class="camera-controls" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
-                        <button class="btn btn-primary" id="btnStartCam" onclick="startCamera()">
+                        <button class="btn btn-primary btn-cam-start" id="btnStartCam" onclick="startCamera()">
                             <span>▶</span> Start Camera
                         </button>
-                        <button class="btn btn-danger" id="btnStopCam" onclick="stopCamera()" style="display:none;">
+                        <button class="btn btn-danger btn-cam-stop" id="btnStopCam" onclick="stopCamera()" style="display:none;">
                             <span>⏹</span> Stop Camera
                         </button>
                         <button class="btn btn-secondary" id="btnSimCam" onclick="startSimulatedCamera()">
@@ -1343,46 +1358,126 @@ if ($stmt) {
             const video = document.getElementById('cameraVideo');
             const placeholder = document.getElementById('cameraPlaceholder');
             const overlay = document.getElementById('scanOverlay');
-            const btnStart = document.getElementById('btnStartCam');
-            const btnStop = document.getElementById('btnStopCam');
+            const errBox = document.getElementById('cameraPermissionError');
+            const errTitle = document.getElementById('cameraErrorTitle');
+            const errMsg = document.getElementById('cameraErrorMsg');
+
+            if (errBox) errBox.style.display = 'none';
+
+            // Show immediate progress state on start buttons
+            document.querySelectorAll('.btn-cam-start').forEach(b => {
+                b.innerHTML = '<span>⏳</span> Requesting Camera...';
+                b.disabled = true;
+            });
+
+            if (badge) {
+                badge.className = 'badge-warn';
+                badge.innerText = 'Requesting Camera...';
+            }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                addThreatLog('warning', 'Webcam API requires HTTPS or camera permissions are disabled. Launching AI Simulation Feed.');
-                startSimulatedCamera();
+                if (errBox) {
+                    errBox.style.display = 'block';
+                    errTitle.innerText = 'HTTPS or Browser Support Required';
+                    errMsg.innerText = 'Webcam API requires a secure connection (HTTPS) or is not supported by this browser.';
+                }
+                resetCamStartButtons();
                 return;
             }
 
             try {
-                badge.innerText = 'Requesting Lens...';
                 let stream = null;
+                // 1. Try standard camera without restrictive facingMode
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({
-                        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: false
                     });
-                } catch (e) {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                } catch (e1) {
+                    // 2. Zero-constraint fallback (broadest compatibility across all USB / laptop cams)
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: false
+                    });
+                }
+
+                if (!stream) {
+                    throw new Error("No media stream returned by camera.");
                 }
 
                 cameraStream = stream;
-                video.srcObject = cameraStream;
+
+                // Make video element visible and configured
                 video.style.display = 'block';
-                await video.play().catch(e => console.log('Video play caught:', e));
+                video.style.position = 'absolute';
+                video.style.inset = '0';
+                video.style.width = '100%';
+                video.style.height = '100%';
+                video.style.objectFit = 'cover';
+                video.style.zIndex = '1';
+                video.muted = true;
+                video.playsInline = true;
+                video.srcObject = stream;
 
-                placeholder.style.display = 'none';
-                overlay.style.display = 'flex';
-                if (btnStart) btnStart.style.display = 'none';
-                if (btnStop) btnStop.style.display = 'inline-flex';
+                // Play video stream
+                try {
+                    await video.play();
+                } catch (pe) {
+                    console.warn("Video play notice:", pe);
+                }
 
-                badge.className = 'badge-safe';
-                badge.innerText = 'Live Monitoring';
+                // Hide placeholder and reveal scanning reticle
+                if (placeholder) placeholder.style.display = 'none';
+                if (overlay) overlay.style.display = 'flex';
 
-                addThreatLog('safe', 'Live camera stream initialized. AI threat shield actively monitoring.');
+                // Swap buttons
+                document.querySelectorAll('.btn-cam-start').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.btn-cam-stop').forEach(b => b.style.display = 'inline-flex');
+
+                if (badge) {
+                    badge.className = 'badge-safe';
+                    badge.innerText = 'Live Monitoring';
+                }
+
+                addThreatLog('safe', 'Live camera stream connected. Optical AI threat scanning active.');
                 startFrameAnalysis();
+
             } catch (err) {
-                console.error("Camera error:", err);
-                addThreatLog('critical', 'Webcam blocked or unavailable (' + err.message + '). Launching AI Simulation Feed.');
-                startSimulatedCamera();
+                console.error("Camera access error:", err);
+                resetCamStartButtons();
+
+                if (badge) {
+                    badge.className = 'badge-warn';
+                    badge.innerText = 'Camera Blocked';
+                }
+
+                if (errBox) {
+                    errBox.style.display = 'block';
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        errTitle.innerText = 'Camera Permission Blocked in Chrome';
+                        errMsg.innerHTML = 'Chrome has blocked camera access for this site.<br>Please allow camera permissions and click Retry below.';
+                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                        errTitle.innerText = 'No Webcam Hardware Found';
+                        errMsg.innerText = 'No camera device was detected on your computer. Connect a webcam or use "Scan Image File" below to scan photos.';
+                    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                        errTitle.innerText = 'Camera Already in Use';
+                        errMsg.innerText = 'Your webcam is being used by another application (Zoom, Teams, or another browser tab). Close the other app and retry.';
+                    } else {
+                        errTitle.innerText = 'Camera Connection Issue';
+                        errMsg.innerText = err.message || 'Unable to connect to webcam.';
+                    }
+                }
+
+                addThreatLog('critical', 'Webcam error: ' + (err.message || err.name));
             }
+        }
+
+        function resetCamStartButtons() {
+            document.querySelectorAll('.btn-cam-start').forEach(b => {
+                b.innerHTML = '<span>▶</span> Start Live Camera Scan';
+                b.disabled = false;
+                b.style.display = 'inline-flex';
+            });
         }
 
         function startSimulatedCamera() {
@@ -1391,16 +1486,17 @@ if ($stmt) {
             const canvas = document.getElementById('cameraCanvas');
             const placeholder = document.getElementById('cameraPlaceholder');
             const overlay = document.getElementById('scanOverlay');
-            const btnStart = document.getElementById('btnStartCam');
-            const btnStop = document.getElementById('btnStopCam');
 
-            placeholder.style.display = 'none';
-            overlay.style.display = 'flex';
-            if (btnStart) btnStart.style.display = 'none';
-            if (btnStop) btnStop.style.display = 'inline-flex';
+            if (placeholder) placeholder.style.display = 'none';
+            if (overlay) overlay.style.display = 'flex';
 
-            badge.className = 'badge-safe';
-            badge.innerText = 'Simulation Feed (Active)';
+            document.querySelectorAll('.btn-cam-start').forEach(b => b.style.display = 'none');
+            document.querySelectorAll('.btn-cam-stop').forEach(b => b.style.display = 'inline-flex');
+
+            if (badge) {
+                badge.className = 'badge-safe';
+                badge.innerText = 'Simulation Feed (Active)';
+            }
             addThreatLog('safe', 'AI Simulated Optical Security Feed online.');
 
             const ctx = canvas.getContext('2d');
@@ -1471,8 +1567,12 @@ if ($stmt) {
                 clearInterval(scanInterval);
                 scanInterval = null;
             }
+
             const video = document.getElementById('cameraVideo');
-            if (video) video.style.display = 'none';
+            if (video) {
+                video.srcObject = null;
+                video.style.display = 'none';
+            }
 
             const canvas = document.getElementById('cameraCanvas');
             if (canvas) {
@@ -1480,14 +1580,19 @@ if ($stmt) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
 
-            document.getElementById('cameraPlaceholder').style.display = 'block';
-            document.getElementById('scanOverlay').style.display = 'none';
-            document.getElementById('btnStartCam').style.display = 'inline-flex';
-            document.getElementById('btnStopCam').style.display = 'none';
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const overlay = document.getElementById('scanOverlay');
+            if (placeholder) placeholder.style.display = 'block';
+            if (overlay) overlay.style.display = 'none';
+
+            resetCamStartButtons();
+            document.querySelectorAll('.btn-cam-stop').forEach(b => b.style.display = 'none');
 
             const badge = document.getElementById('camStatusBadge');
-            badge.className = 'badge-warn';
-            badge.innerText = 'Camera Idle';
+            if (badge) {
+                badge.className = 'badge-warn';
+                badge.innerText = 'Camera Idle';
+            }
 
             addThreatLog('safe', 'Camera monitor stopped.');
         }
