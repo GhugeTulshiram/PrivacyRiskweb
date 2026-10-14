@@ -200,6 +200,10 @@ $result = $stmt->get_result();
                 🔎 Privacy Scanner
             </a>
 
+            <a href="antivirus.php">
+                ⚡ Antivirus & Camera
+            </a>
+
             <a href="history.php" class="active">
                 🕘 Scan History
             </a>

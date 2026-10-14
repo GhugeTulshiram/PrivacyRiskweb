@@ -1217,6 +1217,20 @@ td {
 
 
     <a
+        href="antivirus.php"
+        class="nav-item"
+    >
+
+        <span class="nav-icon">⚡</span>
+
+        <span class="nav-text">
+            Antivirus & Camera
+        </span>
+
+    </a>
+
+
+    <a
         href="history.php"
         class="nav-item"
     >

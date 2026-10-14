@@ -2005,6 +2005,27 @@ if ($total_scans > 0) {
 
 
     <a
+        href="antivirus.php"
+        class="nav-item"
+        style="position:relative;"
+    >
+
+        <span class="nav-icon">
+            ⚡
+        </span>
+
+        <span class="nav-text">
+            Antivirus & Camera
+        </span>
+
+        <span style="margin-left:auto; background:linear-gradient(135deg, #ef4444, #f97316); color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:999px;">
+            NEW
+        </span>
+
+    </a>
+
+
+    <a
         href="history.php"
         class="nav-item"
     >
@@ -2423,6 +2444,43 @@ if ($total_scans > 0) {
 
 
     </section>
+
+
+
+    <!-- =====================================================
+         AI CAMERA & ANTIVIRUS HERO BANNER
+         ===================================================== -->
+    <div style="background: linear-gradient(135deg, rgba(8, 24, 48, 0.95), rgba(4, 15, 30, 0.95)); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 22px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #0284c7, #2563eb); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 0 20px rgba(2, 132, 199, 0.5); flex-shrink: 0;">
+                ⚡
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <span style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 8px; border-radius: 999px;">
+                        ● LIVE DEFENSE ENGINE
+                    </span>
+                    <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #f87171; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); padding: 2px 8px; border-radius: 999px;">
+                        NEW FEATURE
+                    </span>
+                </div>
+                <h2 style="font-size: 19px; font-weight: 800; color: #fff; margin: 0 0 4px 0;">
+                    AI Camera & Multi-Vector Antivirus Shield
+                </h2>
+                <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                    Live camera threat detector (malicious QR codes, card exposure, shoulder-surfing snooper alert) + deep file malware & phishing inspector.
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-shrink: 0;">
+            <a href="antivirus.php" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); transition: transform 0.2s;">
+                <span>📸</span> Launch Camera Scanner
+            </a>
+            <a href="antivirus.php" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s;">
+                <span>📁</span> Scan Files / URLs
+            </a>
+        </div>
+    </div>
 
 
 
@@ -2878,6 +2936,36 @@ if ($total_scans > 0) {
 
 
             <div class="quick-list">
+
+
+                <a
+                    href="antivirus.php"
+                    class="quick-item"
+                    style="border-color: rgba(56, 189, 248, 0.4); background: rgba(8, 30, 60, 0.7);"
+                >
+
+                    <div class="quick-item-icon" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+                        ⚡
+                    </div>
+
+                    <div class="quick-item-text">
+
+                        <strong style="color: #38bdf8;">
+                            Camera & Antivirus Scan
+                        </strong>
+
+                        <span>
+                            Optical threats, malware files & URL inspector
+                        </span>
+
+                    </div>
+
+                    <span class="arrow" style="color: #38bdf8;">
+                        ›
+                    </span>
+
+                </a>
+
 
 
                 <a

@@ -72,6 +72,11 @@ $userName = $_SESSION["user_name"];
             Privacy Scanner
         </a>
 
+        <a href="antivirus.php" class="nav-item">
+            <span>⚡</span>
+            Antivirus & Camera
+        </a>
+
         <a href="history.php" class="nav-item">
             <span>◷</span>
             Scan History
