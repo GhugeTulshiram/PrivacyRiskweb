@@ -359,10 +359,18 @@ async function startCamera() {
             return;
         }
 
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
-        });
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user" },
+                audio: false
+            });
+        } catch (constraintErr) {
+            console.warn("Retrying with simple video constraint:", constraintErr);
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+        }
 
         video.srcObject = cameraStream;
         await video.play();
@@ -374,13 +382,17 @@ async function startCamera() {
             beginFaceDetection();
         } else {
             setStatus(
-                "Camera started. Face recognition models are still loading.",
-                "error"
+                "Camera started. Face recognition models are still loading...",
+                "status"
             );
         }
     } catch (error) {
         console.error("Camera error:", error);
-        setStatus("Camera error: " + error.message, "error");
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            setStatus("Camera permission denied. Click the lock/camera icon next to the address bar to allow camera access.", "error");
+        } else {
+            setStatus("Camera error: " + error.message, "error");
+        }
     }
 }
 

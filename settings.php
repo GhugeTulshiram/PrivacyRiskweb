@@ -36,6 +36,26 @@ if ($result->num_rows === 1) {
 
 $stmt->close();
 
+/* =========================================================
+   BIOMETRIC FACE AUTH STATUS
+   ========================================================= */
+$has_face_registered = false;
+$stmt_face = $conn->prepare(
+    "SELECT user_id
+     FROM face_auth
+     WHERE user_id = ?
+     LIMIT 1"
+);
+if ($stmt_face) {
+    $stmt_face->bind_param("i", $user_id);
+    $stmt_face->execute();
+    $res_face = $stmt_face->get_result();
+    if ($res_face && $res_face->num_rows > 0) {
+        $has_face_registered = true;
+    }
+    $stmt_face->close();
+}
+
 $success = $_GET["success"] ?? "";
 $error = $_GET["error"] ?? "";
 
@@ -348,6 +368,20 @@ $error = $_GET["error"] ?? "";
                 Antivirus & Camera
             </a>
 
+            <a href="face_register.php" class="nav-item" style="position:relative;">
+                <span>👤</span>
+                Face ID Security
+                <?php if ($has_face_registered): ?>
+                    <span style="margin-left:auto; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.4); color:#34d399; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px;">
+                        ACTIVE
+                    </span>
+                <?php else: ?>
+                    <span style="margin-left:auto; background:rgba(99, 102, 241, 0.15); border:1px solid rgba(99, 102, 241, 0.4); color:#a5b4fc; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px;">
+                        SETUP
+                    </span>
+                <?php endif; ?>
+            </a>
+
             <a href="history.php" class="nav-item">
                 <span>🕘</span>
                 Scan History
@@ -603,6 +637,31 @@ $error = $_GET["error"] ?? "";
                         </span>
 
                     </div>
+
+                </div>
+
+                <div class="security-box" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div class="security-icon" style="background: <?= $has_face_registered ? '#103323' : '#1e1b4b' ?>; color: <?= $has_face_registered ? '#86efac' : '#c7d2fe' ?>;">
+                            👤
+                        </div>
+
+                        <div>
+                            <strong>
+                                Biometric Face ID: <?= $has_face_registered ? 'Enrolled &amp; Active' : 'Not Configured' ?>
+                            </strong>
+                            <span>
+                                <?= $has_face_registered 
+                                    ? '128-point facial descriptor registered for 1-click biometric authentication.' 
+                                    : 'Protect your account with AI facial recognition biometric login.' ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <a href="face_register.php" style="padding: 9px 18px; font-size: 13px; text-decoration: none; border-radius: 8px; background: <?= $has_face_registered ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #4f46e5, #6366f1)' ?>; color: #fff; font-weight: bold; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <span>👤</span> <?= $has_face_registered ? 'Manage Face ID' : 'Register Face ID Now' ?>
+                    </a>
 
                 </div>
 

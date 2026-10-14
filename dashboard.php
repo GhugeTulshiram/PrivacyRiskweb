@@ -236,6 +236,30 @@ if ($total_scans > 0) {
     $safe_percentage = 0;
 }
 
+
+/* =========================================================
+   BIOMETRIC FACE AUTH STATUS
+   ========================================================= */
+
+$has_face_registered = false;
+
+$stmt_face = $conn->prepare(
+    "SELECT user_id
+     FROM face_auth
+     WHERE user_id = ?
+     LIMIT 1"
+);
+
+if ($stmt_face) {
+    $stmt_face->bind_param("i", $user_id);
+    $stmt_face->execute();
+    $res_face = $stmt_face->get_result();
+    if ($res_face && $res_face->num_rows > 0) {
+        $has_face_registered = true;
+    }
+    $stmt_face->close();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -2026,6 +2050,34 @@ if ($total_scans > 0) {
 
 
     <a
+        href="face_register.php"
+        class="nav-item"
+        style="position:relative;"
+        title="Biometric Face ID Security Registration"
+    >
+
+        <span class="nav-icon">
+            👤
+        </span>
+
+        <span class="nav-text">
+            Face ID Security
+        </span>
+
+        <?php if ($has_face_registered): ?>
+            <span style="margin-left:auto; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.4); color:#34d399; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px;">
+                ACTIVE
+            </span>
+        <?php else: ?>
+            <span style="margin-left:auto; background:rgba(99, 102, 241, 0.15); border:1px solid rgba(99, 102, 241, 0.4); color:#a5b4fc; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px;">
+                SETUP
+            </span>
+        <?php endif; ?>
+
+    </a>
+
+
+    <a
         href="history.php"
         class="nav-item"
     >
@@ -2280,18 +2332,30 @@ if ($total_scans > 0) {
             </p>
 
 
-            <a
-                href="scan.php"
-                class="hero-button"
-            >
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <a
+                    href="scan.php"
+                    class="hero-button"
+                >
 
-                🔎
+                    🔎
 
-                Run New Scan
+                    Run New Scan
 
-                →
+                    →
 
-            </a>
+                </a>
+
+                <a
+                    href="face_register.php"
+                    class="hero-button"
+                    style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.35), rgba(99, 102, 241, 0.2)); border: 1px solid rgba(99, 102, 241, 0.5); color: #e0e7ff; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);"
+                >
+
+                    👤 <?= $has_face_registered ? 'Face ID Enrolled ✓' : 'Register Face ID 👤' ?>
+
+                </a>
+            </div>
 
 
         </div>
@@ -2482,6 +2546,54 @@ if ($total_scans > 0) {
         </div>
     </div>
 
+
+    <!-- =====================================================
+         BIOMETRIC FACE ID SECURITY BANNER
+         ===================================================== -->
+    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 17, 36, 0.95)); border: 1px solid <?= $has_face_registered ? 'rgba(16, 185, 129, 0.35)' : 'rgba(99, 102, 241, 0.35)' ?>; border-radius: 16px; padding: 22px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); flex-wrap: wrap; position: relative; overflow: hidden;">
+        <div style="position: absolute; right: -20px; top: -20px; width: 140px; height: 140px; background: <?= $has_face_registered ? 'radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%)' : 'radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%)' ?>; pointer-events: none;"></div>
+        
+        <div style="display: flex; align-items: center; gap: 18px; z-index: 1;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: <?= $has_face_registered ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #4f46e5, #6366f1)' ?>; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 0 20px <?= $has_face_registered ? 'rgba(16, 185, 129, 0.5)' : 'rgba(99, 102, 241, 0.5)' ?>; flex-shrink: 0;">
+                👤
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <?php if ($has_face_registered): ?>
+                        <span style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 8px; border-radius: 999px;">
+                            ● BIOMETRICS ACTIVE &amp; ENROLLED
+                        </span>
+                        <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #a5b4fc; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); padding: 2px 8px; border-radius: 999px;">
+                            128-D VECTOR LOCK
+                        </span>
+                    <?php else: ?>
+                        <span style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 999px;">
+                            ● BIOMETRIC SECURITY SETUP
+                        </span>
+                        <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #818cf8; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); padding: 2px 8px; border-radius: 999px;">
+                            ENROLLMENT RECOMMENDED
+                        </span>
+                    <?php endif; ?>
+                </div>
+                <h2 style="font-size: 19px; font-weight: 800; color: #fff; margin: 0 0 4px 0;">
+                    Biometric Face ID Security &amp; Protection
+                </h2>
+                <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                    <?= $has_face_registered 
+                        ? 'Your face descriptor is registered and guarding your account. You can re-scan anytime or test instant biometric sign-in.' 
+                        : 'Enhance your security posture with AI face recognition. Register your facial descriptor to enable instant passwordless biometric sign-in.' ?>
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-shrink: 0; z-index: 1;">
+            <a href="face_register.php" style="display: inline-flex; align-items: center; gap: 8px; background: <?= $has_face_registered ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #4f46e5, #6366f1)' ?>; color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px <?= $has_face_registered ? 'rgba(16, 185, 129, 0.4)' : 'rgba(99, 102, 241, 0.4)' ?>; transition: transform 0.2s;">
+                <span>👤</span> <?= $has_face_registered ? 'Manage / Re-Register Face' : 'Register Face ID Now' ?>
+            </a>
+            <a href="face_login.php" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; padding: 11px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s;">
+                <span>🔓</span> Test Face Login
+            </a>
+        </div>
+    </div>
 
 
     <!-- =====================================================
@@ -2936,6 +3048,35 @@ if ($total_scans > 0) {
 
 
             <div class="quick-list">
+
+
+                <a
+                    href="face_register.php"
+                    class="quick-item"
+                    style="border-color: rgba(99, 102, 241, 0.4); background: rgba(15, 23, 42, 0.7);"
+                >
+
+                    <div class="quick-item-icon" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; font-size: 20px;">
+                        👤
+                    </div>
+
+                    <div class="quick-item-text">
+
+                        <strong style="color: #a5b4fc;">
+                            Face ID Biometric Security
+                        </strong>
+
+                        <span>
+                            <?= $has_face_registered ? 'Biometric descriptor enrolled & active • Manage' : 'Register your face for 1-click biometric login' ?>
+                        </span>
+
+                    </div>
+
+                    <span class="arrow" style="color: #a5b4fc;">
+                        ›
+                    </span>
+
+                </a>
 
 
                 <a
