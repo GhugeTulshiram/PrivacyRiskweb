@@ -2,10 +2,10 @@
 
 session_start();
 
-require_once "../config/db.php";
-require_once "privacy_scanner.php";
-require_once "risk_analyzer.php";
-require_once "masking_service.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/privacy_scanner.php";
+require_once __DIR__ . "/risk_analyzer.php";
+require_once __DIR__ . "/masking_service.php";
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../../index.php");

@@ -7,7 +7,7 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
-require_once "php/config/db.php";
+require_once __DIR__ . "/php/config/db.php";
 
 $user_id = $_SESSION["user_id"];
 $user_name = $_SESSION["user_name"] ?? "User";

@@ -7,8 +7,8 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
-require_once "php/scanner/privacy_scanner.php";
-require_once "php/scanner/risk_analyzer.php";
+require_once __DIR__ . "/php/scanner/privacy_scanner.php";
+require_once __DIR__ . "/php/scanner/risk_analyzer.php";
 
 if (!isset($_SESSION["scan_result"])) {
     header("Location: scan.php");

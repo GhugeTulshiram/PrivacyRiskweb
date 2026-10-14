@@ -21,6 +21,7 @@ $file = __DIR__ . '/../' . $path;
 
 // If direct PHP file exists in root or subdirectories
 if (is_file($file) && pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+    chdir(dirname($file));
     require $file;
     exit;
 }

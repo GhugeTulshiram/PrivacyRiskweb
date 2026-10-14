@@ -2,7 +2,7 @@
 
 session_start();
 
-require_once "php/config/db.php";
+require_once __DIR__ . "/php/config/db.php";
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: index.php");
